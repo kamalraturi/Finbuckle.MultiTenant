@@ -14,20 +14,44 @@
 
 using Finbuckle.MultiTenant.Stores;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Design;
+using System.IO;
 
 namespace EFCoreStoreSample.Data
 {
 
     public class AppDbContext : EFCoreStoreDbContext<AppTenantInfo>
     {
-        public AppDbContext(DbContextOptions options) : base(options)
+        public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
         {
+           
         }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
-            optionsBuilder.UseInMemoryDatabase("EFCoreStoreSampleDb");
+            // optionsBuilder.UseInMemoryDatabase("EFCoreStoreSampleDb");
+           // if (!optionsBuilder.IsConfigured) { optionsBuilder.UseSqlServer("DefaultConnectionString"); }
             base.OnConfiguring(optionsBuilder);
+        }
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+           // modelBuilder.Entity<ToDoItem>().IsMultiTenant();
+
+            base.OnModelCreating(modelBuilder);
+        }
+    }
+
+    public class AppDbContextFactory : IDesignTimeDbContextFactory<AppDbContext>
+    {
+        public AppDbContext CreateDbContext(string[] args)
+        {
+            // Get DbContext from DI system
+            var resolver = new DependencyResolver
+            {
+                //CurrentDirectory = Path.Combine(Directory.GetCurrentDirectory(), "../EfDesignDemo.Web")
+                CurrentDirectory = Path.Combine(Directory.GetCurrentDirectory())
+            };
+            return resolver.ServiceProvider.GetService(typeof(AppDbContext)) as AppDbContext;
         }
     }
 }
